@@ -1,0 +1,75 @@
+using UnityEngine;
+using UnityEditor;
+using System.Linq;
+
+
+public class FixUnityPloblem : EditorWindow
+{
+    [MenuItem("Tools/Fix Unity Ploblem Window")]
+    public static void ShowWindow()
+    {
+        GetWindow<FixUnityPloblem>("Fix Unity Ploblem Window");
+    }
+
+    void OnGUI()
+    {
+        GUILayout.Label("This will scan all GameObjects in the scene and correct any negative values in their scale GameObjects or collider sizes.", EditorStyles.wordWrappedLabel);
+        if (GUILayout.Button("Fix Negative Scale and Collider Size"))
+        {
+            FixAllNegativeValuesInScene();
+        }
+        GUILayout.Space(10);
+
+        GUILayout.Label("This will scan all GameObjects in the scene and remove all missing script references.", EditorStyles.wordWrappedLabel);
+        if (GUILayout.Button("Remove Missing Scripts"))
+        {
+            RemoveAllMissingScripts();
+        }
+    }
+
+    static void FixAllNegativeValuesInScene()
+    {
+        // foreach (GameObject obj in GameObject.FindObjectsOfType<GameObject>())
+        foreach (GameObject obj in GameObject.FindObjectsByType<GameObject>(FindObjectsSortMode.None))
+        {
+            // Fix scale
+            Vector3 scale = obj.transform.localScale;
+            scale.x = Mathf.Abs(scale.x);
+            scale.y = Mathf.Abs(scale.y);
+            scale.z = Mathf.Abs(scale.z);
+            obj.transform.localScale = scale;
+
+            // Fix collider sizes
+            Collider[] colliders = obj.GetComponents<Collider>();
+            foreach (Collider collider in colliders)
+            {
+                if (collider is BoxCollider boxCollider)
+                {
+                    Vector3 size = boxCollider.size;
+                    size.x = Mathf.Abs(size.x);
+                    size.y = Mathf.Abs(size.y);
+                    size.z = Mathf.Abs(size.z);
+                    boxCollider.size = size;
+                }
+                else if (collider is SphereCollider sphereCollider)
+                {
+                    sphereCollider.radius = Mathf.Abs(sphereCollider.radius);
+                }
+                else if (collider is CapsuleCollider capsuleCollider)
+                {
+                    capsuleCollider.height = Mathf.Abs(capsuleCollider.height);
+                    capsuleCollider.radius = Mathf.Abs(capsuleCollider.radius);
+                }
+            }
+        }
+
+        Debug.Log("All negative scale and collider sizes have been fixed.");
+    }
+
+    public static void RemoveAllMissingScripts()
+    {
+        var objs = Resources.FindObjectsOfTypeAll<GameObject>();
+        int count = objs.Sum(GameObjectUtility.RemoveMonoBehavioursWithMissingScript);
+        Debug.Log($"Removed {count} missing scripts");
+    }
+}
