@@ -2,3 +2,4 @@ A script that scans all GameObjects in the scene to fix any negative scale value
 
 
 ![Uploading FixProblem2.gif…]()
+
